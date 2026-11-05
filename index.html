@@ -135,9 +135,9 @@ main{position:relative;z-index:4}
 .lead{margin-top:14px;color:var(--muted);font-size:16px;line-height:1.55}
 
 /* ---------- TICKET VIP ---------- */
-.ticket-stage{perspective:1000px;margin-top:34px}
-.ticket{--mx:.5;--my:.5;--rx:0deg;--ry:0deg;--tx:0px;--ty:0px;--s:1;position:relative;border-radius:26px;text-align:left;
-  transform:translate3d(var(--tx),var(--ty),0) rotateX(var(--rx)) rotateY(var(--ry)) scale(var(--s));will-change:transform;
+.ticket-stage{perspective:750px;margin-top:34px}
+.ticket{--mx:.5;--my:.5;--rx:0deg;--ry:0deg;--rz:0deg;--tx:0px;--ty:0px;--s:1;--shl:0;--shr:0;position:relative;border-radius:26px;text-align:left;
+  transform:translate3d(var(--tx),var(--ty),0) rotateY(var(--ry)) rotateX(var(--rx)) rotateZ(var(--rz)) scale(var(--s));will-change:transform;
   touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
   background:linear-gradient(160deg,#1a1430,#0d0a1b);box-shadow:0 40px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.1) inset;
   -webkit-mask:radial-gradient(circle at 0 calc(100% - 118px),transparent 15px,#000 15.5px) left/51% 100% no-repeat,radial-gradient(circle at 100% calc(100% - 118px),transparent 15px,#000 15.5px) right/51% 100% no-repeat;
@@ -145,8 +145,10 @@ main{position:relative;z-index:4}
 .ticket::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;mix-blend-mode:color-dodge;opacity:.5;
   background:linear-gradient(calc(110deg + var(--mx) * 60deg),transparent 20%,rgba(255,95,200,.6) 35%,rgba(92,242,255,.6) 50%,rgba(157,255,207,.55) 60%,transparent 78%);
   background-size:200% 200%;background-position:calc(var(--mx) * 100%) calc(var(--my) * 100%)}
-.ticket::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  background:radial-gradient(circle at calc(var(--mx)*100%) calc(var(--my)*100%),rgba(255,255,255,.18),transparent 45%)}
+.ticket::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;
+  background:
+    linear-gradient(90deg,rgba(0,0,0,calc(var(--shl)*.55)),transparent 45%,transparent 55%,rgba(0,0,0,calc(var(--shr)*.55))),
+    radial-gradient(circle at calc(var(--mx)*100%) calc(var(--my)*100%),rgba(255,255,255,.2),transparent 45%)}
 .t-top{padding:24px 22px 20px;position:relative;z-index:1}
 .t-head{display:flex;justify-content:space-between;align-items:center;font:600 10px var(--wide);letter-spacing:.3em;color:var(--muted)}
 .t-head .vip{padding:5px 10px;border-radius:6px;background:var(--holo);background-size:300% 100%;animation:holo 6s linear infinite;color:#0a0714;font-weight:800;letter-spacing:.2em}
@@ -194,6 +196,8 @@ main{position:relative;z-index:4}
 .btn-holo::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.7) 50%,transparent 70%);background-size:250% 100%;animation:glint 2.8s ease-in-out infinite;mix-blend-mode:overlay}
 .btn-line{color:var(--ink);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.2);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 @media (min-width:560px){.btns.two{grid-template-columns:1fr 1fr}}
+.ics-alt{display:block;text-align:center;font-size:13px;color:var(--muted);text-underline-offset:3px;padding:4px}
+.ics-alt[hidden]{display:none}
 
 /* ---------- RSVP ---------- */
 .rsvp-card{margin-top:30px;padding:24px 20px;border-radius:28px;text-align:left;position:relative;
@@ -291,6 +295,7 @@ main{position:relative;z-index:4}
       </div>
       <div class="btns reveal">
         <a class="btn btn-line cal-btn" id="cal" href="#" rel="noopener">📆 Agendar en mi calendario</a>
+        <a class="ics-alt" id="icsAlt" href="#" hidden>¿No se abrió tu calendario? Descargá el evento</a>
       </div>
     </div>
   </section>
@@ -407,10 +412,11 @@ const calBtn=$('#cal');
 if(isAndroid){
   // abre la app de calendario del celular (Google Calendar, Samsung, etc.) con el evento cargado
   const e=encodeURIComponent;
-  calBtn.href='intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.item/event;'
+  calBtn.href='intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.dir/event;'
     +'S.title='+e(evTitle)+';S.eventLocation='+e(lugarFull)+';S.description='+e(evDesc)+';'
     +'l.beginTime='+new Date(CFG.start).getTime()+';l.endTime='+new Date(CFG.end).getTime()+';'
     +'S.browser_fallback_url='+e(gcalUrl)+';end';
+  const alt=$('#icsAlt');alt.hidden=false;alt.addEventListener('click',ev=>{ev.preventDefault();downloadIcs()});
 }else if(isIOS){
   calBtn.addEventListener('click',ev=>{ev.preventDefault();downloadIcs()});
 }else{
@@ -515,21 +521,24 @@ forty.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventD
 let tx=0,ty=0,cx=0,cy=0;
 addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;tx=(e.clientX/innerWidth-.5)*2;ty=(e.clientY/innerHeight-.5)*2},{passive:true});
 addEventListener('deviceorientation',e=>{if(e.gamma==null)return;tx=Math.max(-1,Math.min(1,e.gamma/25));ty=Math.max(-1,Math.min(1,(e.beta-45)/25))},{passive:true});
-/* tarjeta VIP: se mueve con el dedo (resorte), sin llegar a girar */
+/* tarjeta VIP: se gira con el dedo como un papel (resorte), sin dar la vuelta */
 const ticket=$('#ticket');
-const T={rx:0,ry:0,tx:0,ty:0,s:1,mx:.5,my:.5},V={rx:0,ry:0,tx:0,ty:0,s:0,mx:0,my:0},G={...T};
+const T={rx:0,ry:0,rz:0,tx:0,ty:0,s:1,mx:.5,my:.5},V={rx:0,ry:0,rz:0,tx:0,ty:0,s:0,mx:0,my:0},G={...T};
 let press=null;
 const clamp=(v,a)=>Math.max(-a,Math.min(a,v));
 function aimAt(e){
   const r=ticket.getBoundingClientRect();
   const px=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),py=Math.min(1,Math.max(0,(e.clientY-r.top)/r.height));
   const dx=e.clientX-press.x,dy=e.clientY-press.y;
-  G.ry=clamp((px-.5)*26+dx*.06,16);G.rx=clamp(-(py-.5)*22-dy*.05,14);
-  G.tx=clamp(dx*.35,40);G.ty=clamp(dy*.25,24);G.s=.97;G.mx=px;G.my=py;
+  // el lado que tocás se hunde, y arrastrar lo hace girar sobre su eje
+  G.ry=clamp((px-.5)*16+dx*.22,32);
+  G.rx=clamp(-(py-.5)*12-dy*.12,18);
+  G.rz=clamp(dx*.025,4);
+  G.tx=clamp(dx*.06,14);G.ty=0;G.s=1.02;G.mx=px;G.my=py;
 }
 ticket.addEventListener('pointerdown',e=>{press={x:e.clientX,y:e.clientY,id:e.pointerId};try{ticket.setPointerCapture(e.pointerId)}catch(_){}aimAt(e);vibe(10)});
 ticket.addEventListener('pointermove',e=>{if(press&&e.pointerId===press.id)aimAt(e)});
-function release(){if(!press)return;press=null;G.s=1;G.tx=0;G.ty=0;V.ry+=G.ry*.15;V.rx+=G.rx*.15}
+function release(){if(!press)return;press=null;G.s=1;G.tx=0;G.ty=0;G.rz=0;V.ry-=T.ry*.12;V.rx-=T.rx*.12}
 ['pointerup','pointercancel','lostpointercapture'].forEach(t=>ticket.addEventListener(t,release));
 function spring(k,stiff,damp){V[k]+=(G[k]-T[k])*stiff;V[k]*=damp;T[k]+=V[k]}
 (function f(){
@@ -537,9 +546,10 @@ function spring(k,stiff,damp){V[k]+=(G[k]-T[k])*stiff;V[k]*=damp;T[k]+=V[k]}
   if(!reduce){
     forty.style.transform=`perspective(900px) rotateY(${cx*12}deg) rotateX(${-cy*9}deg) translateY(${scrollY*.2}px)`;
     if(!press){G.ry=cx*9;G.rx=-cy*7;G.mx=(cx+1)/2;G.my=(cy+1)/2}
-    const st=press?.18:.09,dp=press?.6:.82;
+    const st=press?.16:.06,dp=press?.62:.88;   // al soltar: vaivén tipo papel
     for(const k in T)spring(k,st,dp);
-    ticket.style.cssText=`--rx:${T.rx.toFixed(2)}deg;--ry:${T.ry.toFixed(2)}deg;--tx:${T.tx.toFixed(1)}px;--ty:${T.ty.toFixed(1)}px;--s:${T.s.toFixed(3)};--mx:${T.mx.toFixed(3)};--my:${T.my.toFixed(3)}`;
+    const shl=Math.max(0,-T.ry)/32,shr=Math.max(0,T.ry)/32;
+    ticket.style.cssText=`--rx:${T.rx.toFixed(2)}deg;--ry:${T.ry.toFixed(2)}deg;--rz:${T.rz.toFixed(2)}deg;--tx:${T.tx.toFixed(1)}px;--ty:${T.ty.toFixed(1)}px;--s:${T.s.toFixed(3)};--mx:${T.mx.toFixed(3)};--my:${T.my.toFixed(3)};--shl:${shl.toFixed(3)};--shr:${shr.toFixed(3)}`;
   }
   requestAnimationFrame(f)})();
 
