@@ -26,8 +26,8 @@
   --pad:clamp(18px,5vw,40px);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html{background:var(--bg);overflow-x:hidden;-webkit-text-size-adjust:100%}
-body{font-family:Inter,system-ui,-apple-system,sans-serif;color:var(--ink);background:var(--bg);overflow-x:hidden;
+html{background:var(--bg);overflow-x:hidden;overflow-x:clip;-webkit-text-size-adjust:100%}
+body{font-family:Inter,system-ui,-apple-system,sans-serif;color:var(--ink);background:var(--bg);overflow-x:hidden;overflow-x:clip;
   -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;min-height:100vh}
 a{color:inherit}
 ::selection{background:var(--pink);color:#000}
@@ -116,7 +116,7 @@ main{position:relative;z-index:4}
 @keyframes drop{0%{opacity:0;transform:translateY(-40px) scale(1.6);filter:blur(18px)}100%{opacity:1;transform:none;filter:none}}
 
 /* ---------- MENSAJE (palabras que se encienden con scroll) ---------- */
-.msg{height:220vh;position:relative}
+.msg{height:200vh;height:200svh;position:relative}
 .msg .sticky{position:sticky;top:0;height:100vh;height:100svh;display:flex;align-items:center;justify-content:center;padding:0 var(--pad)}
 .msg p{max-width:16ch;font:400 clamp(40px,11.5vw,84px)/1.04 var(--serif);text-align:center;letter-spacing:-.01em}
 .msg .w{opacity:.14;transition:opacity .25s,color .25s,text-shadow .25s}
@@ -550,8 +550,8 @@ $('#rsvpForm').addEventListener('submit',e=>{
   $('#err').textContent='';
   const tot=Q.ad+Q.mn;
   const det=tot===1?'Voy yo solo/a.':`Vamos ${tot}: ${plural(Q.ad,'mayor','mayores')}${Q.mn?` y ${plural(Q.mn,'menor','menores')} (hasta 12 años)`:''}.`;
-  const msg=vengo?`¡Hola Carlos! 🪩 Soy ${n} y confirmo que voy a tus 40 el sábado 21/11.\n\n👥 ${det}\n\n¡Nos vemos! 🥂`
-                 :`¡Hola Carlos! Soy ${n}. Lamentablemente no voy a poder ir el 21/11 😢 ¡Feliz 40 igual, que la pases genial! 🎉`;
+  const msg=vengo?`¡Hola! 🪩 Soy ${n} y confirmo que voy a los 40 de Carlos el sábado 21/11.\n\n👥 ${det}\n\n¡Nos vemos! 🥂`
+                 :`¡Hola! Soy ${n}. Lamentablemente no voy a poder ir a los 40 de Carlos el sábado 21/11 😢 ¡Que lo disfruten mucho! 🎉`;
   if(vengo){const r=e.submitter?e.submitter.getBoundingClientRect():null;confetti.burst(r?r.left+r.width/2:innerWidth/2,r?r.top:innerHeight/2,140)}
   const num=CFG.whatsapp.replace(/\D/g,'');
   setTimeout(()=>{location.href=`https://wa.me/${num}?text=${encodeURIComponent(msg)}`},vengo?700:0);
